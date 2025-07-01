@@ -4,6 +4,7 @@ library(httr)
 library(jsonlite)
 library(shiny)
 library(bslib)
+library(DT)
 
 # Define UI for application
 ui <- fluidPage(
@@ -30,9 +31,9 @@ ui <- fluidPage(
       tabPanel("Data Exploration",
                sidebarLayout(
                  sidebarPanel(
-                   dateRangeInput("dates","Date Range"),
+                   dateRangeInput("dates","Date Range",start="2025-06-01"),
                    sliderInput("magnituderange","Earthquake Magnitude Range",
-                               min=0, max=10,value=c(0,10),step=1),
+                               min=0, max=10,value=c(1,8),step=1),
                    sliderInput("latituderange","Latitude Range",
                                min=-90, max=90,value=c(51,72),step=1),
                    sliderInput("longituderange","Longitude Range",
@@ -41,7 +42,8 @@ ui <- fluidPage(
                    checkboxGroupInput("columns","Select Columns of the Dataset",
                                       choices=c("mag","place","time","updated","tz","url","detail","felt","cdi","mmi","alert","status",
                                                 "tsunami","sig","net","code","ids","sources","types","nst","dmin","rms",
-                                                "gap","magType","type","title"))
+                                                "gap","magType","type","title")),
+                   downloadButton("download","Download the Data")
                  ),
                  mainPanel(tableOutput("datatable"))
                ))
@@ -79,8 +81,9 @@ server <- function(input, output) {
     return(Earthquake_Data)
   }
   
-  #Render Data Table
-  output$datatable<-renderDataTable(usgs_earthquake(
+  
+  #Create an initial Reactive Data Table
+  Data_Input<-reactive({usgs_earthquake(
     Start_Day = input$dates[1],
     End_Day=input$dates[2],
     Minimum_Magnitude=input$magnituderange[1],
@@ -91,7 +94,31 @@ server <- function(input, output) {
     Maximum_Longitude=input$longituderange[2],
     Limit_Results_To=input$limit,
     Event_Type="Earthquake"
-  ))
+  )})
+  
+  #Create a Reactive Final Data Table Based on Inputs
+  Final_Data<-reactive({
+    
+    #Create a temporary dataframe
+    temp_df<-Data_Input()
+    
+    #Allow the temp_df to be subsetted if specific columns are selected, but default to all columns
+    ifelse(is.null(input$columns),Final_Data<-temp_df,
+           Final_Data<-temp_df|>select(input$columns))
+    
+    #Render Final Data Table
+    Final_Data
+  })
+  #Output the Data Table
+  output$datatable<-renderTable({Final_Data()})
+  
+  #Download Data as CSV
+  output$download<- downloadHandler(
+    filename="USGS Earthquake Data.csv",
+    content=function(file){
+      write.csv(Final_Data(),file,row.names=FALSE)
+    })
+  
 }
 
 # Run the application 
