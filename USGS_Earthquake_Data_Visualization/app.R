@@ -27,6 +27,26 @@ ui <- fluidPage(
                tags$p(" "),
                tags$p(tags$img(src="https://upload.wikimedia.org/wikipedia/commons/0/08/USGS_logo.png",height="100px"))),
       
+      #Tab for the Data Download Section
+      tabPanel("Data Download",
+               sidebarLayout(
+                 sidebarPanel(
+                   dateRangeInput("dates","Date Range",start="2025-06-01"),
+                   sliderInput("magnituderange","Earthquake Magnitude Range",
+                               min=0, max=10,value=c(1,8),step=1),
+                   sliderInput("latituderange","Latitude Range",
+                               min=-90, max=90,value=c(51,72),step=1),
+                   sliderInput("longituderange","Longitude Range",
+                               min=-180, max=180,value=c(-170,-129),step=1),
+                   numericInput("limit","Number of Observations (Observations With Largest Magnitude Are Included First)",value=100,max=20000),
+                   checkboxGroupInput("columns","Select Columns of the Dataset",
+                                      choices=c("mag","place","time","updated","tz","url","detail","felt","cdi","mmi","alert","status",
+                                                "tsunami","sig","net","code","ids","sources","types","nst","dmin","rms",
+                                                "gap","magType","type","title")),
+                   downloadButton("download","Download the Data")
+                 ),
+                 mainPanel(tableOutput("datatable"))
+               )),
       #Tab for the Data Exploration Section
       tabPanel("Data Exploration",
                sidebarLayout(
