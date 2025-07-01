@@ -50,7 +50,9 @@ usgs_earthquake<-function(Start_Day="2025-06-01",
              "&limit=", Limit_Results_To)
   unparsed<-GET(url)
   parsed<-fromJSON(rawToChar(unparsed$content))
-  Earthquake_Data<-as_tibble(parsed$features)
+  Earthquake_Data<-as_tibble(parsed$features$properties)
   return(Earthquake_Data)
 }
 data_2<-usgs_earthquake()
+data_2_subset<-data_2$properties
+
