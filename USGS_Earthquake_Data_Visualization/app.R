@@ -25,7 +25,7 @@ ui <- fluidPage(
                tags$p(tags$b("Data Download"),": This tab allows the user to specify and subset the specific data needed from the USGS Earthquake Catalog. The data is displayed and allows the user to save it as a .csv file"),
                tags$p(tags$b("Data Exploration"),": This tab provides allows the user to choose variables/combinations of variables that are then summarized via numerical and graphical summaries. The user is able to change the type of plot shown along with the type of summary reported."),
                tags$p(" "),
-               tags$p(tags$img(src="https://upload.wikimedia.org/wikipedia/commons/0/08/USGS_logo.png",height="100px"))),
+               tags$p(tags$img(src="https://upload.wikimedia.org/wikipedia/commons/0/08/USGS_logo.png",height="600px"))),
       
       #Tab for the Data Download Section
       tabPanel("Data Download",
@@ -41,9 +41,18 @@ ui <- fluidPage(
                    numericInput("limit","Number of Observations (Observations With Largest Magnitude Are Included First)",
                                 value=100,max=20000),
                    checkboxGroupInput("columns","Select Columns of the Dataset",
-                                      choices=c("mag","place","time","updated","tz","url","detail","felt","cdi","mmi","alert","status",
-                                                "tsunami","sig","net","code","ids","sources","types","nst","dmin","rms",
-                                                "gap","magType","type","title")),
+                                      choices=c("Magnitude","Time (UTC milliseconds since epoch)","Place",
+                                                "Data Updated On (UTC milliseconds since epoch)",
+                                                "Time Zone Offset","Url",
+                                                "Detail","Felt Reports","Maximum Reported Intensity",
+                                                "Maximum Estimated Instrumental Intensity",
+                                                "Alert","Status","Tsunami Flag","Significance (0-1000)",
+                                                "Main Network Contributor","Code","Ids","Network Contributors",
+                                                "Product Types","Number of Seismic Stations Utilized",
+                                                "Horizontal Distance from Epicenter to Nearest Station",
+                                                "Root Mean Square Travel Time Residual (sec)",
+                                                "Largest Azimuthal Gap Between Azimuthally Adjacent Stations",
+                                                "Method/Algorithm to Determine Magnitude","Event Type","Title")),
                    downloadButton("download","Download the Data")
                  ),
                  mainPanel(tableOutput("datatable"))
@@ -53,7 +62,18 @@ ui <- fluidPage(
                sidebarLayout(
                  sidebarPanel(
                    checkboxGroupInput("selectvars","Which Variables For Analysis",
-                                      choices = c("T"))
+                                      choices = c("Magnitude","Time (UTC milliseconds since epoch)","Place",
+                                                  "Data Updated On (UTC milliseconds since epoch)",
+                                                  "Time Zone Offset",
+                                                  "Felt Reports","Maximum Reported Intensity",
+                                                  "Maximum Estimated Instrumental Intensity",
+                                                  "Alert","Status","Tsunami Flag","Significance (0-1000)",
+                                                  "Main Network Contributor","Code","Network Contributors",
+                                                  "Number of Seismic Stations Utilized",
+                                                  "Horizontal Distance from Epicenter to Nearest Station",
+                                                  "Root Mean Square Travel Time Residual (sec)",
+                                                  "Largest Azimuthal Gap Between Azimuthally Adjacent Stations",
+                                                  "Method/Algorithm to Determine Magnitude","Event Type","Title"))
                  ),
                  mainPanel()
                ))
@@ -110,11 +130,35 @@ server <- function(input, output) {
   Final_Data<-reactive({
     
     #Create a temporary dataframe
-    temp_df<-Data_Input()
+    temp_df<-Data_Input()|>
+      mutate(tz=as.factor(tz))|>
+      rename(Magnitude=mag, Place=place, "Time (UTC milliseconds since epoch)"=time, 
+             "Data Updated On (UTC milliseconds since epoch)"=updated, "Time Zone Offset"=tz, 
+             Url=url,Detail=detail,"Felt Reports"=felt,"Maximum Reported Intensity"=cdi,
+             "Maximum Estimated Instrumental Intensity"=mmi,Alert=alert,Status=status,
+             "Tsunami Flag"=tsunami,"Significance (0-1000)"=sig,"Main Network Contributor"=net,
+             Code=code,Ids=ids,"Network Contributors"=sources,"Product Types"=types,
+             "Number of Seismic Stations Utilized"=nst,"Horizontal Distance from Epicenter to Nearest Station"=dmin,
+             "Root Mean Square Travel Time Residual (sec)"=rms,
+             "Largest Azimuthal Gap Between Azimuthally Adjacent Stations"=gap,
+             "Method/Algorithm to Determine Magnitude"=magType,"Event Type"=type,Title=title)|>
+      select("Magnitude","Time (UTC milliseconds since epoch)","Place",
+             "Data Updated On (UTC milliseconds since epoch)",
+             "Time Zone Offset","Url",
+             "Detail","Felt Reports","Maximum Reported Intensity",
+             "Maximum Estimated Instrumental Intensity",
+             "Alert","Status","Tsunami Flag","Significance (0-1000)",
+             "Main Network Contributor","Code","Ids","Network Contributors",
+             "Product Types","Number of Seismic Stations Utilized",
+             "Horizontal Distance from Epicenter to Nearest Station",
+             "Root Mean Square Travel Time Residual (sec)",
+             "Largest Azimuthal Gap Between Azimuthally Adjacent Stations",
+             "Method/Algorithm to Determine Magnitude","Event Type","Title")
     
     #Allow the temp_df to be subsetted if specific columns are selected, but default to all columns
     ifelse(is.null(input$columns),Final_Data<-temp_df,
-           Final_Data<-temp_df|>select(input$columns))
+           Final_Data<-temp_df|>
+             select(input$columns))
     
     #Render Final Data Table
     Final_Data
