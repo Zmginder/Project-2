@@ -38,7 +38,8 @@ ui <- fluidPage(
                                min=-90, max=90,value=c(51,72),step=1),
                    sliderInput("longituderange","Longitude Range",
                                min=-180, max=180,value=c(-170,-129),step=1),
-                   numericInput("limit","Number of Observations (Observations With Largest Magnitude Are Included First)",value=100,max=20000),
+                   numericInput("limit","Number of Observations (Observations With Largest Magnitude Are Included First)",
+                                value=100,max=20000),
                    checkboxGroupInput("columns","Select Columns of the Dataset",
                                       choices=c("mag","place","time","updated","tz","url","detail","felt","cdi","mmi","alert","status",
                                                 "tsunami","sig","net","code","ids","sources","types","nst","dmin","rms",
@@ -51,21 +52,10 @@ ui <- fluidPage(
       tabPanel("Data Exploration",
                sidebarLayout(
                  sidebarPanel(
-                   dateRangeInput("dates","Date Range",start="2025-06-01"),
-                   sliderInput("magnituderange","Earthquake Magnitude Range",
-                               min=0, max=10,value=c(1,8),step=1),
-                   sliderInput("latituderange","Latitude Range",
-                               min=-90, max=90,value=c(51,72),step=1),
-                   sliderInput("longituderange","Longitude Range",
-                               min=-180, max=180,value=c(-170,-129),step=1),
-                   numericInput("limit","Number of Observations (Observations With Largest Magnitude Are Included First)",value=100,max=20000),
-                   checkboxGroupInput("columns","Select Columns of the Dataset",
-                                      choices=c("mag","place","time","updated","tz","url","detail","felt","cdi","mmi","alert","status",
-                                                "tsunami","sig","net","code","ids","sources","types","nst","dmin","rms",
-                                                "gap","magType","type","title")),
-                   downloadButton("download","Download the Data")
+                   checkboxGroupInput("selectvars","Which Variables For Analysis",
+                                      choices = c("T"))
                  ),
-                 mainPanel(tableOutput("datatable"))
+                 mainPanel()
                ))
     )
 )
