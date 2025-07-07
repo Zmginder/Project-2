@@ -318,16 +318,23 @@ server <- function(input, output, session) {
   output$Table<-renderTable({
     data<-Final_Data()
     
-    data|>
-      group_by(.data[[input$selectvars1]])|>
+    dt<-data|>
+      group_by(Group=get(input$selectvars1))|>
       summarise(
-        Mean=mean(.data[[input$selectvars2]],na.rm=TRUE),
-        SD=sd(.data[[input$selectvars2]],na.rm=TRUE),
-        Variance=var(.data[[input$selectvars2]],na.rm=TRUE),
-        Minimum=min(.data[[input$selectvars2]],na.rm=TRUE),
-        Maximum=max(.data[[input$selectvars2]],na.rm=TRUE),
-        Range=range(.data[[input$selectvars2]],na.rm=TRUE)
-      )
+        Mean=mean(get(input$selectvars2),na.rm=TRUE),
+        SD=sd(get(input$selectvars2),na.rm=TRUE),
+        Variance=var(get(input$selectvars2),na.rm=TRUE),
+        Minimum=min(get(input$selectvars2),na.rm=TRUE),
+        Maximum=max(get(input$selectvars2),na.rm=TRUE))
+    
+    names(dt)[names(dt)=="Group"]<-input$selectvars1
+    dt
+  })
+  #Create a contingency table
+  output$ContTable<-renderTable({
+    data<-Final_Data()
+    
+    table(data[[input$selectvars1]],data[[input$selectvars2]])
   })
   #Create Outputs
   output$Summarys<-renderUI({
@@ -349,6 +356,8 @@ server <- function(input, output, session) {
       plotOutput("Barplot")
     }else if(input$SummaryDropdown %in% c("Table Summary")){
       tableOutput("Table")
+    }else if(input$SummaryDropdown %in% c("Contingency Table")){
+      tableOutput("ContTable")
     }else{NULL}
   })
 }
