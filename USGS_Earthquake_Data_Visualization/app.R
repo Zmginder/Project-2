@@ -42,16 +42,16 @@ ui <- fluidPage(
                    numericInput("limit","Number of Observations (Observations With Largest Magnitude Are Included First)",
                                 value=100,max=20000),
                    checkboxGroupInput("columns","Select Columns of the Dataset",
-                                      choices=c("Magnitude","Time_(UTC_milliseconds_since_epoch)","Place",
-                                                "Data_Updated_On_(UTC_milliseconds_since_epoch)",
+                                      choices=c("Magnitude","Time_UTC_milliseconds_since_epoch_","Place",
+                                                "Data_Updated_On_UTC_milliseconds_since_epoch_",
                                                 "Time_Zone_Offset","Url",
                                                 "Detail","Felt_Reports","Maximum_Reported_Intensity",
                                                 "Maximum_Estimated_Instrumental_Intensity",
-                                                "Alert","Status","Tsunami_Flag","Significance_(0-1000)",
+                                                "Alert","Status","Tsunami_Flag","Significance_0_through_1000_",
                                                 "Main_Network_Contributor","Code","Ids","Network_Contributors",
                                                 "Product_Types","Number_of_Seismic_Stations_Utilized",
                                                 "Horizontal_Distance_from_Epicenter_to_Nearest_Station",
-                                                "Root_Mean_Square_Travel_Time_Residual_(sec)",
+                                                "Root_Mean_Square_Travel_Time_Residual_sec_",
                                                 "Largest_Azimuthal_Gap_Between_Azimuthally_Adjacent_Stations",
                                                 "Method_to_Determine_Magnitude","Event_Type","Title")),
                    downloadButton("download","Download the Data")
@@ -63,29 +63,29 @@ ui <- fluidPage(
                sidebarLayout(
                  sidebarPanel(
                    selectInput("selectvars1","Variable 1",
-                                      choices = c("Magnitude","Time_(UTC_milliseconds_since_epoch)","Place",
-                                                  "Data_Updated_On_(UTC_milliseconds_since_epoch)",
+                                      choices = c("Magnitude","Time_UTC_milliseconds_since_epoch_","Place",
+                                                  "Data_Updated_On_UTC_milliseconds_since_epoch_",
                                                   "Time_Zone_Offset",
                                                   "Felt_Reports","Maximum_Reported_Intensity",
                                                   "Maximum_Estimated_Instrumental_Intensity",
-                                                  "Alert","Status","Tsunami_Flag","Significance_(0-1000)",
+                                                  "Alert","Status","Tsunami_Flag","Significance_0_through_1000_",
                                                   "Main_Network_Contributor","Code","Network_Contributors",
                                                   "Number_of_Seismic_Stations_Utilized",
                                                   "Horizontal_Distance_from_Epicenter_to_Nearest_Station",
-                                                  "Root_Mean_Square_Travel_Time_Residual_(sec)",
+                                                  "Root_Mean_Square_Travel_Time_Residual_sec_",
                                                   "Largest_Azimuthal_Gap_Between_Azimuthally_Adjacent_Stations",
                                                   "Method_to_Determine_Magnitude","Event_Type","Title")),
                  selectInput("selectvars2","Variable 2",
-                             choices = c("Magnitude","Time_(UTC_milliseconds_since_epoch)","Place",
-                                         "Data_Updated_On_(UTC_milliseconds_since_epoch)",
+                             choices = c("Magnitude","Time_UTC_milliseconds_since_epoch_","Place",
+                                         "Data_Updated_On_UTC_milliseconds_since_epoch_",
                                          "Time_Zone_Offset",
                                          "Felt_Reports","Maximum_Reported_Intensity",
                                          "Maximum_Estimated_Instrumental_Intensity",
-                                         "Alert","Status","Tsunami_Flag","Significance_(0-1000)",
+                                         "Alert","Status","Tsunami_Flag","Significance_0_through_1000_",
                                          "Main_Network_Contributor","Code","Network_Contributors",
                                          "Number_of_Seismic_Stations_Utilized",
                                          "Horizontal_Distance_from_Epicenter_to_Nearest_Station",
-                                         "Root_Mean_Square_Travel_Time_Residual_(sec)",
+                                         "Root_Mean_Square_Travel_Time_Residual_sec_",
                                          "Largest_Azimuthal_Gap_Between_Azimuthally_Adjacent_Stations",
                                          "Method_to_Determine_Magnitude","Event_Type","Title")),
                
@@ -149,26 +149,26 @@ server <- function(input, output, session) {
     #Create a temporary dataframe
     temp_df<-Data_Input()|>
       mutate(tz=as.factor(tz),place=sub(".*of\\s+", "", place))|>
-      rename(Magnitude=mag, Place=place, "Time_(UTC_milliseconds_since_epoch)"=time, 
-             "Data_Updated_On_(UTC_milliseconds_since_epoch)"=updated, "Time_Zone_Offset"=tz, 
+      rename(Magnitude=mag, Place=place, "Time_UTC_milliseconds_since_epoch_"=time, 
+             "Data_Updated_On_UTC_milliseconds_since_epoch_"=updated, "Time_Zone_Offset"=tz, 
              Url=url,Detail=detail,"Felt_Reports"=felt,"Maximum_Reported_Intensity"=cdi,
              "Maximum_Estimated_Instrumental_Intensity"=mmi,Alert=alert,Status=status,
-             "Tsunami_Flag"=tsunami,"Significance_(0-1000)"=sig,"Main_Network_Contributor"=net,
+             "Tsunami_Flag"=tsunami,"Significance_0_through_1000_"=sig,"Main_Network_Contributor"=net,
              Code=code,Ids=ids,"Network_Contributors"=sources,"Product_Types"=types,
              "Number_of_Seismic_Stations_Utilized"=nst,"Horizontal_Distance_from_Epicenter_to_Nearest_Station"=dmin,
-             "Root_Mean_Square_Travel_Time_Residual_(sec)"=rms,
+             "Root_Mean_Square_Travel_Time_Residual_sec_"=rms,
              "Largest_Azimuthal_Gap_Between_Azimuthally_Adjacent_Stations"=gap,
              "Method_to_Determine_Magnitude"=magType,"Event_Type"=type,Title=title)|>
-      select("Magnitude","Time_(UTC_milliseconds_since_epoch)","Place",
-             "Data_Updated_On_(UTC_milliseconds_since_epoch)",
+      select("Magnitude","Time_UTC_milliseconds_since_epoch_","Place",
+             "Data_Updated_On_UTC_milliseconds_since_epoch_",
              "Time_Zone_Offset","Url",
              "Detail","Felt_Reports","Maximum_Reported_Intensity",
              "Maximum_Estimated_Instrumental_Intensity",
-             "Alert","Status","Tsunami_Flag","Significance_(0-1000)",
+             "Alert","Status","Tsunami_Flag","Significance_0_through_1000_",
              "Main_Network_Contributor","Code","Ids","Network_Contributors",
              "Product_Types","Number_of_Seismic_Stations_Utilized",
              "Horizontal_Distance_from_Epicenter_to_Nearest_Station",
-             "Root_Mean_Square_Travel_Time_Residual_(sec)",
+             "Root_Mean_Square_Travel_Time_Residual_sec_",
              "Largest_Azimuthal_Gap_Between_Azimuthally_Adjacent_Stations",
              "Method_to_Determine_Magnitude","Event_Type","Title")
     
@@ -192,14 +192,14 @@ server <- function(input, output, session) {
   
   #Create Dynamic Ui for Summary Types
   output$SummaryDropdown<-renderUI({
-    NumericVariables<-c("Magnitude","Time_(UTC_milliseconds_since_epoch)",
-                       "Data_Updated_On_(UTC_milliseconds_since_epoch)",
+    NumericVariables<-c("Magnitude","Time_UTC_milliseconds_since_epoch_",
+                       "Data_Updated_On_UTC_milliseconds_since_epoch_",
                        "Felt_Reports","Maximum_Reported_Intensity",
                        "Maximum_Estimated_Instrumental_Intensity",
-                       "Significance_(0-1000)",
+                       "Significance_0_through_1000_",
                        "Number_of_Seismic_Stations_Utilized",
                        "Horizontal_Distance_from_Epicenter_to_Nearest_Station",
-                       "Root_Mean_Square_Travel_Time_Residual_(sec)",
+                       "Root_Mean_Square_Travel_Time_Residual_sec_",
                        "Largest_Azimuthal_Gap_Between_Azimuthally_Adjacent_Stations")
     is_var_1_numeric<- input$selectvars1 %in% NumericVariables
     is_var_2_numeric<- input$selectvars2 %in% NumericVariables
@@ -247,6 +247,7 @@ server <- function(input, output, session) {
     
     ggplot(data,aes_string(x=input$selectvars1,fill=input$facetvar))+
       geom_density()+
+      facet_wrap(as.formula(paste("~", input$facetvar)))+
       labs(title="Density Plot",
            x=input$selectvars1,
            fill=input$facetvar)
