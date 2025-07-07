@@ -252,14 +252,105 @@ server <- function(input, output, session) {
            x=input$selectvars1,
            fill=input$facetvar)
   })
+  
+  #Create scatterplot
+  output$Scatterplot<-renderPlot({
+    data<-Final_Data()
+    
+    ggplot(data,aes_string(x=input$selectvars1,y=input$selectvars2))+
+      geom_point()+
+      labs(title="Scatterplot",
+           x=input$selectvars1,
+           y=input$selectvars2)
+  })
+  #Create faceted scatterplot
+  output$ScatterplotF<-renderPlot({
+    data<-Final_Data()
+    
+    ggplot(data,aes_string(x=input$selectvars1,y=input$selectvars2))+
+      geom_point()+
+      facet_wrap(as.formula(paste("~", input$facetvar)))+
+      labs(title="Scatterplot",
+           x=input$selectvars1,
+           y=input$selectvars2)
+  })
+  #Create histogram
+  output$Histogram<-renderPlot({
+    data<-Final_Data()
+    
+    ggplot(data,aes_string(x=input$selectvars1))+
+      geom_histogram()+
+      labs(title="Histogram",
+           x=input$selectvars1)
+  })
+  #Create faceted histogram
+  output$HistogramF<-renderPlot({
+    data<-Final_Data()
+    
+    ggplot(data,aes_string(x=input$selectvars1))+
+      geom_histogram()+
+      facet_wrap(as.formula(paste("~", input$facetvar)))+
+      labs(title="Histogram",
+           x=input$selectvars1)
+  })
+  #Create barplot
+  output$Barplot<-renderPlot({
+    data<-Final_Data()
+    
+    ggplot(data,aes_string(x=input$selectvars1,y=input$selectvars2))+
+      geom_bar(stat="identity")+
+      labs(title="Bar Plot",
+           x=input$selectvars1,
+           y=input$selectvars2)
+  })
+  #Create faceted barplot
+  output$BarplotF<-renderPlot({
+    data<-Final_Data()
+    
+    ggplot(data,aes_string(x=input$selectvars1,y=input$selectvars2))+
+      geom_bar(stat="identity")+
+      facet_wrap(as.formula(paste("~", input$facetvar)))+
+      labs(title="Bar Plot",
+           x=input$selectvars1,
+           y=input$selectvars2)
+  })
+  #Create Numerical Table Summary
+  output$Table<-renderTable({
+    data<-Final_Data()
+    
+    data|>
+      group_by(.data[[input$selectvars1]])|>
+      summarise(
+        Mean=mean(.data[[input$selectvars2]],na.rm=TRUE),
+        SD=sd(.data[[input$selectvars2]],na.rm=TRUE),
+        Variance=var(.data[[input$selectvars2]],na.rm=TRUE),
+        Minimum=min(.data[[input$selectvars2]],na.rm=TRUE),
+        Maximum=max(.data[[input$selectvars2]],na.rm=TRUE),
+        Range=range(.data[[input$selectvars2]],na.rm=TRUE),
+        .groups="drop"
+      )
+  })
   #Create Outputs
   output$Summarys<-renderUI({
     if((input$SummaryDropdown %in% c("Density Plot")) & input$facetbox){
       plotOutput("DensityPlotF")
     }else if(input$SummaryDropdown %in% c("Density Plot")){
       plotOutput("DensityPlot")
-    }
-    else{NULL}
+    }else if((input$SummaryDropdown %in% c("Scatter Plot")) & input$facetbox){
+      plotOutput("ScatterplotF")
+    }else if(input$SummaryDropdown %in% c("Scatter Plot")){
+      plotOutput("Scatterplot")
+    }else if((input$SummaryDropdown %in% c("Histogram")) & input$facetbox){
+      plotOutput("HistogramF")
+    }else if(input$SummaryDropdown %in% c("Histogram")){
+      plotOutput("Histogram")
+    }else if((input$SummaryDropdown %in% c("Bar Plot"))&input$facetbox){
+      plotOutput("BarplotF")
+    }else if(input$SummaryDropdown %in% c("Bar Plot")){
+      plotOutput("Barplot")
+    }else if(input$SummaryDropdown %in% c("Table Summary")){
+      tableOutput("Table")
+    }else{NULL}
   })
 }
 
