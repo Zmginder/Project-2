@@ -91,10 +91,11 @@ ui <- fluidPage(
                
                #Create a Dynamic UI For The Sumary Output Dropdown
                uiOutput("SummaryDropdown"),
+               selectInput("HeatmapQ","Include a Magnitude Heatmap?",choice=c("Yes","No")),
                uiOutput("Faceting"),
                uiOutput("FacetingVars")
                ),
-                 mainPanel(uiOutput("Summarys"))
+                 mainPanel(uiOutput("Summarys"),uiOutput("CalendarHeatmap"))
                ))))
 # Define server logic
 server <- function(input, output, session) {
@@ -206,7 +207,7 @@ server <- function(input, output, session) {
     
     if(is_var_1_numeric & is_var_2_numeric){
       selectInput("SummaryDropdown","What Summary?",
-                  choices=c("Density Plot","Scatter Plot", "Histogram", "*Creative"))
+                  choices=c("Density Plot","Scatter Plot", "Histogram"))
     }
     else if(!is_var_1_numeric & !is_var_2_numeric){selectInput("SummaryDropdown","What Summary?",
                                                                choices=c("Contingency Table"))}
@@ -216,7 +217,7 @@ server <- function(input, output, session) {
   
   #Dynamically show the faceting option if plots are selected
   output$Faceting<-renderUI({
-    if(input$SummaryDropdown %in% c("Density Plot","Scatter Plot","Histogram","Bar Plot","*Creative")){
+    if(input$SummaryDropdown %in% c("Density Plot","Scatter Plot","Histogram","Bar Plot")){
       checkboxInput("facetbox","Facet Plot?")}
     else{NULL}
   })
@@ -360,6 +361,174 @@ server <- function(input, output, session) {
       tableOutput("ContTable")
     }else{NULL}
   })
+  
+  #Calendar Heatmap Function from ggTimeSeries Github
+  ggplot_calendar_heatmap <- function(dtDateValue,
+                                      cDateColumnName = "",
+                                      cValueColumnName = "",
+                                      vcGroupingColumnNames = "Year",
+                                      dayBorderSize = 0.25,
+                                      dayBorderColour = "black",
+                                      monthBorderSize = 2,
+                                      monthBorderColour = "black",
+                                      monthBorderLineEnd = "round") {
+    Year <- ""
+    MonthOfYear <- ""
+    WeekOfYear <- ""
+    DayOfWeek <- ""
+    as.formula <- ""
+    MonthChange <- ""
+    meanWeekOfYear <- ""
+    
+    dtDateValue<-copy(data.table(dtDateValue))
+    
+    set(dtDateValue,j=cDateColumnName,value=as.Date(as.POSIXct(dtDateValue[[cDateColumnName]]/1000,origin="1970-01-01")))
+    
+    dtDateValue[, Year := as.integer(strftime(get(cDateColumnName), "%Y"))]
+    vcGroupingColumnNames <- unique(c(vcGroupingColumnNames, "Year"))
+    dtDateValue <- merge(
+      dtDateValue,
+      setnames(
+        dtDateValue[
+          ,
+          list(DateCol = seq(
+            min(get(cDateColumnName)),
+            max(get(cDateColumnName)),
+            "days"
+          )),
+          vcGroupingColumnNames
+        ],
+        "DateCol",
+        cDateColumnName
+      ),
+      c(vcGroupingColumnNames, cDateColumnName),
+      all = T
+    )
+    
+    dtDateValue[, MonthOfYear := as.integer(strftime(get(cDateColumnName), "%m"))]
+    dtDateValue[, WeekOfYear := 1 + as.integer(strftime(get(cDateColumnName), "%W"))]
+    dtDateValue[, DayOfWeek := as.integer(strftime(get(cDateColumnName), "%w"))]
+    dtDateValue[DayOfWeek == 0L, DayOfWeek := 7L]
+    
+    ggplotcalendar_heatmap <-
+      ggplot(
+        data = dtDateValue[, list(WeekOfYear, DayOfWeek)],
+        aes(
+          x = WeekOfYear,
+          y = DayOfWeek
+        )
+      ) +
+      geom_tile(
+        data = dtDateValue,
+        aes_string(fill = cValueColumnName),
+        color = dayBorderColour,
+        size = dayBorderSize
+      ) +
+      coord_fixed() +
+      xlab("Month") +
+      ylab("DoW") +
+      facet_wrap(as.formula(paste(
+        "~", paste(vcGroupingColumnNames, collapse = "+")
+      )))
+    
+    setkeyv(
+      dtDateValue,
+      c(
+        vcGroupingColumnNames,
+        "DayOfWeek",
+        "WeekOfYear",
+        "MonthOfYear"
+      )
+    )
+    dtDateValue[, MonthChange := c(1, diff(MonthOfYear)), c(vcGroupingColumnNames, "DayOfWeek")]
+    dtMonthChangeDatasetBetweenWeeks <- dtDateValue[MonthChange == 1]
+    dtMonthChangeDatasetBetweenWeeks[, WeekOfYear := WeekOfYear - 0.5]
+    dtMonthChangeDatasetBetweenWeeks <- rbind(
+      dtMonthChangeDatasetBetweenWeeks[, c("DayOfWeek", "WeekOfYear", vcGroupingColumnNames), with = F],
+      dtDateValue[, list(WeekOfYear = 0.5 + max(WeekOfYear)), c(vcGroupingColumnNames, "DayOfWeek")]
+    )
+    if (nrow(dtMonthChangeDatasetBetweenWeeks) > 0) {
+      ggplotcalendar_heatmap <- ggplotcalendar_heatmap +
+        geom_segment(
+          data = dtMonthChangeDatasetBetweenWeeks,
+          aes(
+            x = WeekOfYear,
+            xend = WeekOfYear,
+            y = DayOfWeek - 0.5,
+            yend = DayOfWeek + 0.5
+          ),
+          size = monthBorderSize,
+          colour = monthBorderColour,
+          lineend = monthBorderLineEnd
+        )
+    }
+    setkeyv(
+      dtDateValue,
+      c(
+        vcGroupingColumnNames,
+        "WeekOfYear",
+        "DayOfWeek",
+        "MonthOfYear"
+      )
+    )
+    dtDateValue[, MonthChange := c(1, diff(MonthOfYear)), vcGroupingColumnNames]
+    MonthChangeDatasetWithinWeek <- dtDateValue[MonthChange == 1 &
+                                                  (DayOfWeek != 1)]
+    MonthChangeDatasetWithinWeek[, DayOfWeek := DayOfWeek - 0.5]
+    MonthChangeDatasetWithinWeek <- rbind(
+      MonthChangeDatasetWithinWeek[, c("DayOfWeek", "WeekOfYear", vcGroupingColumnNames), with = F],
+      dtDateValue[, list(DayOfWeek = c(min(DayOfWeek) - 0.5, max(DayOfWeek) + 0.5)), c(vcGroupingColumnNames, "WeekOfYear")]
+    )
+    if (nrow(MonthChangeDatasetWithinWeek) > 0) {
+      ggplotcalendar_heatmap <- ggplotcalendar_heatmap +
+        geom_segment(
+          data = MonthChangeDatasetWithinWeek,
+          aes(
+            x = WeekOfYear - 0.5,
+            xend = WeekOfYear + 0.5,
+            y = DayOfWeek,
+            yend = DayOfWeek
+          ),
+          size = monthBorderSize,
+          colour = monthBorderColour,
+          lineend = monthBorderLineEnd
+        )
+    }
+    dtMonthLabels <- dtDateValue[,
+                                 list(meanWeekOfYear = mean(WeekOfYear)),
+                                 by = c("MonthOfYear")
+    ]
+    dtMonthLabels[, MonthOfYear := month.abb[MonthOfYear]]
+    ggplotcalendar_heatmap <- ggplotcalendar_heatmap +
+      scale_x_continuous(
+        breaks = dtMonthLabels[, meanWeekOfYear],
+        labels = dtMonthLabels[, MonthOfYear],
+        expand = c(0, 0)
+      ) +
+      scale_y_continuous(
+        trans = "reverse",
+        breaks = c(1:7),
+        labels = c("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"),
+        expand = c(0, 0)
+      )+scale_fill_gradient(low="green",high="red")
+    return(ggplotcalendar_heatmap)
+  }
+  
+  #Create Heatmap Output
+  output$Heatmap<-renderPlot({
+    data<-Final_Data()
+    
+    ggplot_calendar_heatmap(
+      dtDateValue = data,
+      cDateColumnName="Time_UTC_milliseconds_since_epoch_",
+      cValueColumnName="Magnitude")
+  })
+  
+  #Create Heatmap Render that is Dynamic
+  output$CalendarHeatmap<-renderUI({
+    if((input$HeatmapQ %in% c("Yes"))){
+      plotOutput("Heatmap")}
+    else {NULL}})
 }
 
 # Run the application 
