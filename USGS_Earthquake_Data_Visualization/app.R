@@ -326,8 +326,7 @@ server <- function(input, output, session) {
         Variance=var(.data[[input$selectvars2]],na.rm=TRUE),
         Minimum=min(.data[[input$selectvars2]],na.rm=TRUE),
         Maximum=max(.data[[input$selectvars2]],na.rm=TRUE),
-        Range=range(.data[[input$selectvars2]],na.rm=TRUE),
-        .groups="drop"
+        Range=range(.data[[input$selectvars2]],na.rm=TRUE)
       )
   })
   #Create Outputs
