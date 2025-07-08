@@ -15,4 +15,6 @@ data.table
 Code to install all the packages:
 install.packages(c("tidyverse","httr","jsonlite","shiny","ggplot2","data.table"))
 
-Code to run application:
+Code to run application: 
+shiny::runGitHub(repo="Project-2",username="Zmginder",subdir = "USGS_Earthquake_Data_Visualization")
+
