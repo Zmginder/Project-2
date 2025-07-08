@@ -3,9 +3,8 @@ library(tidyverse)
 library(httr)
 library(jsonlite)
 library(shiny)
-library(bslib)
-library(DT)
 library(ggplot2)
+library(data.table)
 
 # Define UI for application
 ui <- fluidPage(
